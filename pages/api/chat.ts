@@ -11,6 +11,8 @@ export default async function handler(
 ) {
   const { question, history } = req.body;
 
+  console.log('History', history);
+
   if (!question) {
     return res.status(400).json({ message: 'No question in the request' });
   }
@@ -18,10 +20,10 @@ export default async function handler(
   const sanitizedQuestion = question.trim().replaceAll('\n', ' ');
 
   /* create vectorstore*/
-  const vectorStore = await SupabaseVectorStore.fromExistingIndex(
-    supabaseClient,
-    new OpenAIEmbeddings(),
-  );
+  // const vectorStore = await SupabaseVectorStore.fromExistingIndex(
+  //   supabaseClient,
+  //   new OpenAIEmbeddings(),
+  // );
 
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
@@ -37,15 +39,16 @@ export default async function handler(
 
   const model = openai;
   // create the chain
-  const chain = makeChain(vectorStore, (token: string) => {
+  const chain = makeChain(history, (token: string) => {
     sendData(JSON.stringify({ data: token }));
   });
 
   try {
     //Ask a question
     const response = await chain.call({
-      question: sanitizedQuestion,
-      chat_history: history || [],
+      question: "What's the weather like today?",
+      // question: sanitizedQuestion,
+      // chat_history: history || [],
     });
 
     console.log('response', response);

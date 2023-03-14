@@ -7,6 +7,31 @@ import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 import LoadingDots from '@/components/ui/LoadingDots';
 
+const initialMessage = {
+  message: `ImprovGPT is an improv teacher who is an expert in improv. He is very nice and supportive and occasionally teaches the student wise lessons and gives them feedback about how to improve their improv.
+  
+  ImprovGPT knows about the following games and each game comes with an initial message:
+  
+  Game: One-Word Story
+  Initial Message: Let's play the game One-Word Story. We will tell a story one-word at a time. You can start with a word and I will continue the story. If you're ready I will give you a suggesetion about a genre of the story and then you can start. Are you ready?
+  
+  Game: One-Word Proverb
+  Initial Message: Let's play the game One-Word Proverb. Let's create a wise proverb one-word at a time. You can start with a word and I will continue the proverb :) 
+
+  Game: Story Geometry
+  Initial Message: Let's play the game Story Geometry! I will give you two unrelated sentences and you will have to connect them with a third sentence. Then, the other way around: You will have to give me two unrelated sentences and I will connect them with a third sentence. Are you ready?
+
+  Game: Three Things
+  Initial Message: Let's play the game Three Things! I will give you a topic and you will have to give me three things related to that topic. Then, the other way around: You will have to give me a topic and I will give you three things related to that topic. Let's go back and forth a couple of times :) Are you ready?
+  
+  Game: Just a Scene
+  Initial Message: Let's play the game Just a Scene! We will play an improv scene where we both improvise a character. When acting out a character you can add physical acting using square brackets: [enters the room, looks him in the eyes]. I will give you a suggestion for a location and then you can start. Are you ready?
+
+  Whenever a game is started, start with the corresponding message. For Just a Scene, only ever generate one message at a time.
+  `,
+  type: 'apiMessage',
+};
+
 export default function Home() {
   const [query, setQuery] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
@@ -17,9 +42,26 @@ export default function Home() {
   }>({
     messages: [
       {
-        message: 'Hi there its Tom! What would like to learn about notion?',
+        message: `Hi there! I am ImprovGPT, your personal improv teacher. I can help you play your favorite improv games. I currently know about the following games:
+* One-Word Story
+* One-Word Proverb
+* Story Geometry
+* Three Things
+* Just a Scene
+
+Choose which game you want to play! You can always interject within a game and start a new game :)`,
         type: 'apiMessage',
       },
+      // {
+      //   message:
+      //     "Let's play the game One-Word Story. We will tell a story one-word at a time. You can start with a word and I will continue the story :)",
+      //   type: 'apiMessage',
+      // },
+      // {
+      //   message:
+      //     "Let's play the game story geometry! I will give you two unrelated sentences and you will have to connect them with a third sentence. Then, the other way around. Are you ready?",
+      //   type: 'apiMessage',
+      // },
     ],
     history: [],
   });
@@ -62,6 +104,20 @@ export default function Home() {
 
     const ctrl = new AbortController();
 
+    const cleanHistory = messages
+      .map((message) =>
+        message.type === 'apiMessage'
+          ? 'Improv Teacher: ' + message.message
+          : 'User: ' + message.message,
+      )
+      .join('\n');
+
+    const fullMessages = [
+      initialMessage,
+      ...messages,
+      { message: question, type: 'userMessage' },
+    ];
+
     try {
       fetchEventSource('/api/chat', {
         method: 'POST',
@@ -70,7 +126,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           question,
-          history,
+          history: fullMessages,
         }),
         signal: ctrl.signal,
         onmessage: (event) => {
@@ -123,19 +179,26 @@ export default function Home() {
     <>
       <Layout>
         <div className="mx-auto flex flex-col gap-4">
-          <h1 className="text-2xl font-bold leading-[1.1] tracking-tighter text-center">
-            Thomas Frank Notion Guide ChatBot
+          <h1 className="text-3xl font-bold leading-[1.1] tracking-tighter text-center">
+            ImprovGPT
           </h1>
+          <h2 className="text-xl font-semibold text-center">
+            Your personal improv teacher. Play your favorite games :)
+          </h2>
           <main className={styles.main}>
             <div className={styles.cloud}>
-              <div ref={messageListRef} className={styles.messagelist}>
-                {chatMessages.map((message, index) => {
+              <div
+                ref={messageListRef}
+                className={styles.messagelist}
+                style={{ display: 'flex', flexDirection: 'column-reverse' }}
+              >
+                {chatMessages.reverse().map((message, index) => {
                   let icon;
                   let className;
                   if (message.type === 'apiMessage') {
                     icon = (
                       <Image
-                        src="/Thomas-Frank-Avatar.jpg"
+                        src="/KeithJohnstoneAvatar.png"
                         alt="AI"
                         width="40"
                         height="40"
@@ -149,8 +212,8 @@ export default function Home() {
                       <Image
                         src="/usericon.png"
                         alt="Me"
-                        width="30"
-                        height="30"
+                        width="40"
+                        height="40"
                         className={styles.usericon}
                         priority
                       />
@@ -163,7 +226,9 @@ export default function Home() {
                   }
                   return (
                     <div key={index} className={className}>
-                      {icon}
+                      <div style={{ width: 40, height: 40, marginRight: 20 }}>
+                        {icon}
+                      </div>
                       <div className={styles.markdownanswer}>
                         <ReactMarkdown linkTarget="_blank">
                           {message.message}
@@ -181,15 +246,13 @@ export default function Home() {
                     disabled={loading}
                     onKeyDown={handleEnter}
                     ref={textAreaRef}
-                    autoFocus={false}
+                    autoFocus={true}
                     rows={1}
                     maxLength={512}
                     id="userInput"
                     name="userInput"
                     placeholder={
-                      loading
-                        ? 'Waiting for response...'
-                        : 'How does notion api work?'
+                      loading ? 'Waiting for response...' : 'Yes and...'
                     }
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
@@ -221,8 +284,9 @@ export default function Home() {
           </main>
         </div>
         <footer className="m-auto">
-          <a href="https://twitter.com/mayowaoshin">
-            Powered by LangChain. Demo built by Mayo (Twitter: @mayowaoshin).
+          <a href="https://twitter.com/SilasAlberti">
+            Built by Silas Alberti. Inspired by the amazing TAPS 103 class at
+            Stanford.
           </a>
         </footer>
       </Layout>
