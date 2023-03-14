@@ -192,51 +192,54 @@ Choose which game you want to play! You can always interject within a game and s
                 className={styles.messagelist}
                 style={{ display: 'flex', flexDirection: 'column-reverse' }}
               >
-                {chatMessages.reverse().map((message, index) => {
-                  let icon;
-                  let className;
-                  if (message.type === 'apiMessage') {
-                    icon = (
-                      <Image
-                        src="/KeithJohnstoneAvatar.png"
-                        alt="AI"
-                        width="40"
-                        height="40"
-                        className={styles.boticon}
-                        priority
-                      />
-                    );
-                    className = styles.apimessage;
-                  } else {
-                    icon = (
-                      <Image
-                        src="/usericon.png"
-                        alt="Me"
-                        width="40"
-                        height="40"
-                        className={styles.usericon}
-                        priority
-                      />
-                    );
-                    // The latest message sent by the user will be animated while waiting for a response
-                    className =
-                      loading && index === chatMessages.length - 1
-                        ? styles.usermessagewaiting
-                        : styles.usermessage;
-                  }
-                  return (
-                    <div key={index} className={className}>
-                      <div style={{ width: 40, height: 40, marginRight: 20 }}>
-                        {icon}
+                {chatMessages
+                  .slice()
+                  .reverse()
+                  .map((message, index) => {
+                    let icon;
+                    let className;
+                    if (message.type === 'apiMessage') {
+                      icon = (
+                        <Image
+                          src="/KeithJohnstoneAvatar.png"
+                          alt="AI"
+                          width="40"
+                          height="40"
+                          className={styles.boticon}
+                          priority
+                        />
+                      );
+                      className = styles.apimessage;
+                    } else {
+                      icon = (
+                        <Image
+                          src="/usericon.png"
+                          alt="Me"
+                          width="40"
+                          height="40"
+                          className={styles.usericon}
+                          priority
+                        />
+                      );
+                      // The latest message sent by the user will be animated while waiting for a response
+                      className =
+                        loading && index === chatMessages.length - 1
+                          ? styles.usermessagewaiting
+                          : styles.usermessage;
+                    }
+                    return (
+                      <div key={index} className={className}>
+                        <div style={{ width: 40, height: 40, marginRight: 20 }}>
+                          {icon}
+                        </div>
+                        <div className={styles.markdownanswer}>
+                          <ReactMarkdown linkTarget="_blank">
+                            {message.message}
+                          </ReactMarkdown>
+                        </div>
                       </div>
-                      <div className={styles.markdownanswer}>
-                        <ReactMarkdown linkTarget="_blank">
-                          {message.message}
-                        </ReactMarkdown>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
               </div>
             </div>
             <div className={styles.center}>
